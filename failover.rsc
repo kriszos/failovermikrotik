@@ -7,11 +7,16 @@
 # this script please visit the wiki page at
 # http://wiki.mikrotik.com/wiki/Failover_Scripting
 # ------------------- header -------------------
+# changes by Kriszos, version 1.1.1
+# changes:
+# removed checking second ISP,
+# added support for multpile hosts to check connectivity
+# added mail notification,
 
 
 
 # ------------- start editing here -------------
-# changes by Kriszos
+
 # Edit the variables below to suit your needs
 
 # Please fill the WAN interface names
@@ -22,22 +27,24 @@
 #:local GatewayISP1 1.1.1.1
 #:local GatewayISP2 2.2.2.2
 
-# Please fill the ping check host - currently: resolver1.opendns.com
+# Fill the ping check host and manualy add static routes via main gateway
+# In example below are anycast root DNS servers
 :local PingTarget1 192.58.128.30
 :local PingTarget2 192.203.230.10
 :local PingTarget3 199.7.91.13
+
 # Please fill how many ping failures are allowed before fail-over happends
 :local FailTreshold 10
 
 # Define the distance increase of a route when it fails
-:local DistanceIncrease 240
+:local DistanceIncrease 200
 
-# Define name of main ISP for mail
+# Define name of main ISP for mail and logging
 :local MainISPname UPC
 
 # Define name of TO & CC field for mail both MUST be SET
-:local TOmail1 monitoring@allware.pro
-:local TOmail2 krzysztof.szostak@allware.pro
+:local TOmail1 admin@example.com
+:local TOmail2 ceo@example.com
 
 
 
@@ -61,7 +68,7 @@
 :local PingResult2
 :local PingResult3
 
-# Check
+# Check hosts
 :set PingResult1 [ping $PingTarget1 count=1]
 :put $PingResult1
 :set PingResult2 [ping $PingTarget2 count=1]
@@ -69,6 +76,7 @@
 :set PingResult3 [ping $PingTarget3 count=1]
 :put $PingResult3
 
+# sumarize PingResults
 :local TotalResult 0
 :set TotalResult ($PingResult1 + $PingResult2 + $PingResult3)
 

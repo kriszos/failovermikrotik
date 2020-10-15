@@ -27,7 +27,7 @@
 :local PingTarget2 192.203.230.10
 
 # Please fill how many ping failures are allowed before fail-over happends
-:local FailTreshold 5
+:local FailTreshold 10
 
 # Define the distance increase of a route when it fails
 :local DistanceIncrease 50
@@ -35,9 +35,9 @@
 # Define name of main ISP for mail
 :local MainISPname UPC
 
-# Define name of TO & CC field for mail
-:local TOmail monitoring@allware.pro
-:local CCmail 
+# Define name of TO & CC field for mail both MUST be SET
+:local TOmail1 monitoring@allware.pro
+:local TOmail2 krzysztof.szostak@allware.pro
 
 
 
@@ -66,6 +66,7 @@
 :set PingResult1 [ping $PingTarget1 count=1]
 :put $PingResult1
 
+# IF FAIL
 :if ($PingResult1 = 0) do={
 	:if ($PingFailCountISP1 < ($FailTreshold+2)) do={
 		:set PingFailCountISP1 ($PingFailCountISP1 + 1)
@@ -77,27 +78,29 @@
 				/ip route set $i distance=([/ip route get $i distance] + $DistanceIncrease)
 				/ip firewall connection remove [/ip firewall connection find protocol=udp]
 				/ip firewall connection remove [/ip firewall connection find protocol=icmp]
+				:log warning "$MainISPname Route distance increase finished."
 				:delay 4
-				/tool e-mail send to=$TOmail cc=$CCmail subject="PROBLEM_$ThisBox_$MainISPname"
+				/tool e-mail send to=$TOmail1 cc=$TOmail2 subject="PROBLEM_$ThisBox_$MainISPname"
 			}
-			:log warning "$MainISPname Route distance increase finished."
 		}
 	}
 }
+
+# IF NOT FAIL
 :if ($PingResult1 = 1) do={
 	:if ($PingFailCountISP1 > 0) do={
 		:set PingFailCountISP1 ($PingFailCountISP1 - 1)
 
-		:if ($PingFailCountISP1 = ($FailTreshold -1)) do={
+		:if ($PingFailCountISP1 = ($FailTreshold - $FailTreshold)) do={
 			:log warning "$MainISPname can reach $PingTarget1 again - bringing back original distance of routes."
 			:foreach i in=[/ip route find comment=MAIN && static] do={
 				/ip route set $i distance=([/ip route get $i distance] - $DistanceIncrease)
 				/ip firewall connection remove [/ip firewall connection find protocol=udp]
 				/ip firewall connection remove [/ip firewall connection find protocol=icmp]
+				:log warning "$MainISPname Route distance decrease finished."
 				:delay 4
-				/tool e-mail send to=$TOmail cc=$CCmail subject="OK_$ThisBox_$MainISPname"
+				/tool e-mail send to=$TOmail1 cc=$TOmail2 subject="OK_$ThisBox_$MainISPname"
 			}
-			:log warning "$MainISPname Route distance decrease finished."
 		}
 	}
 }

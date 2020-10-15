@@ -27,7 +27,7 @@
 :local PingTarget2 192.203.230.10
 :local PingTarget3 199.7.91.13
 # Please fill how many ping failures are allowed before fail-over happends
-:local FailTreshold 15
+:local FailTreshold 10
 
 # Define the distance increase of a route when it fails
 :local DistanceIncrease 240
@@ -61,16 +61,22 @@
 :local PingResult2
 :local PingResult3
 
-
-
-# Check 1
+# Check
 :set PingResult1 [ping $PingTarget1 count=1]
 :put $PingResult1
+:set PingResult2 [ping $PingTarget2 count=1]
+:put $PingResult2
+:set PingResult3 [ping $PingTarget3 count=1]
+:put $PingResult3
+
+:local TotalResult 0
+:set TotalResult ($PingResult1 + $PingResult2 + $PingResult3)
+
 # IF FAIL
-:if ($PingResult1 = 0) do={
+:if ($TotalResult < 1) do={
 	:if ($PingFailCountISP1 < ($FailTreshold+2)) do={
 		:set PingFailCountISP1 ($PingFailCountISP1 + 1)
-		:log warning "$MainISPname lost $PingFailCountISP1 pings to $PingTarget1 - checking."
+		:log warning "$MainISPname lost $PingFailCountISP1 pings to WAN - checking."
 
 		:if ($PingFailCountISP1 = $FailTreshold) do={
 			:log warning "$MainISPname has a problem en route to $PingTarget1 - increasing distance of routes."
@@ -87,99 +93,12 @@
 }
 
 # IF NOT FAIL
-:if ($PingResult1 = 1) do={
+:if ($TotalResult > 0) do={
 	:if ($PingFailCountISP1 > 0) do={
 		:set PingFailCountISP1 ($PingFailCountISP1 - 1)
 
-		:if ($PingFailCountISP1 < 4) do={
+		:if ($PingFailCountISP1 = 0) do={
 			:log warning "$MainISPname can reach $PingTarget1 again - bringing back original distance of routes."
-			:foreach i in=[/ip route find comment=MAIN && static] do={
-				/ip route set $i distance=([/ip route get $i distance] - $DistanceIncrease)
-				/ip firewall connection remove [/ip firewall connection find protocol=udp]
-				/ip firewall connection remove [/ip firewall connection find protocol=icmp]
-				:log warning "$MainISPname Route distance decrease finished."
-				:delay 1
-				/tool e-mail send to=$TOmail1 cc=$TOmail2 subject="OK_$ThisBox_$MainISPname"
-			}
-		}
-	}
-}
-
-:delay 1
-# Check 2
-:set PingResult2 [ping $PingTarget2 count=1]
-:put $PingResult2
-# IF FAIL
-:if ($PingResult2 = 0) do={
-	:if ($PingFailCountISP1 < ($FailTreshold+2)) do={
-		:set PingFailCountISP1 ($PingFailCountISP1 + 1)
-		:log warning "$MainISPname lost $PingFailCountISP1 pings to $PingTarget2 - checking."
-
-		:if ($PingFailCountISP1 = $FailTreshold) do={
-			:log warning "$MainISPname has a problem en route to $PingTarget2 - increasing distance of routes."
-			:foreach i in=[/ip route find comment=MAIN && static] do={
-				/ip route set $i distance=$DistanceIncrease
-				/ip firewall connection remove [/ip firewall connection find protocol=udp]
-				/ip firewall connection remove [/ip firewall connection find protocol=icmp]
-				:log warning "$MainISPname Route distance increase finished."
-				:delay 1
-				/tool e-mail send to=$TOmail1 cc=$TOmail2 subject="PROBLEM_$ThisBox_$MainISPname"
-			}
-		}
-	}
-}
-
-# IF NOT FAIL
-:if ($PingResult2 = 1) do={
-	:if ($PingFailCountISP1 > 0) do={
-		:set PingFailCountISP1 ($PingFailCountISP1 - 1)
-
-		:if ($PingFailCountISP1 < 4) do={
-			:log warning "$MainISPname can reach $PingTarget2 again - bringing back original distance of routes."
-			:foreach i in=[/ip route find comment=MAIN && static] do={
-				/ip route set $i distance=$DistanceIncrease
-				/ip firewall connection remove [/ip firewall connection find protocol=udp]
-				/ip firewall connection remove [/ip firewall connection find protocol=icmp]
-				:log warning "$MainISPname Route distance decrease finished."
-				:delay 1
-				/tool e-mail send to=$TOmail1 cc=$TOmail2 subject="OK_$ThisBox_$MainISPname"
-			}
-		}
-	}
-}
-
-
-:delay 1
-# Check 3
-:set PingResult3 [ping $PingTarget3 count=1]
-:put $PingResult3
-# IF FAIL
-:if ($PingResult3 = 0) do={
-	:if ($PingFailCountISP1 < ($FailTreshold+2)) do={
-		:set PingFailCountISP1 ($PingFailCountISP1 + 1)
-		:log warning "$MainISPname lost $PingFailCountISP1 pings to $PingTarget3 - checking."
-
-		:if ($PingFailCountISP1 = $FailTreshold) do={
-			:log warning "$MainISPname has a problem en route to $PingTarget3 - increasing distance of routes."
-			:foreach i in=[/ip route find comment=MAIN && static] do={
-				/ip route set $i distance=$DistanceIncrease
-				/ip firewall connection remove [/ip firewall connection find protocol=udp]
-				/ip firewall connection remove [/ip firewall connection find protocol=icmp]
-				:log warning "$MainISPname Route distance increase finished."
-				:delay 1
-				/tool e-mail send to=$TOmail1 cc=$TOmail2 subject="PROBLEM_$ThisBox_$MainISPname"
-			}
-		}
-	}
-}
-
-# IF NOT FAIL
-:if ($PingResult3 = 1) do={
-	:if ($PingFailCountISP1 > 0) do={
-		:set PingFailCountISP1 ($PingFailCountISP1 - 1)
-
-		:if ($PingFailCountISP1 < 4) do={
-			:log warning "$MainISPname can reach $PingTarget3 again - bringing back original distance of routes."
 			:foreach i in=[/ip route find comment=MAIN && static] do={
 				/ip route set $i distance=([/ip route get $i distance] - $DistanceIncrease)
 				/ip firewall connection remove [/ip firewall connection find protocol=udp]

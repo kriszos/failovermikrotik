@@ -106,7 +106,7 @@
 		:set PingFailCountISP1 ($PingFailCountISP1 - 1)
 
 		:if ($PingFailCountISP1 = 0) do={
-			:log warning "$MainISPname can reach $PingTarget1 again - bringing back original distance of routes."
+			:log warning "$MainISPname can reach WAN again - bringing back original distance of routes."
 			:foreach i in=[/ip route find comment=MAIN && static] do={
 				/ip route set $i distance=([/ip route get $i distance] - $DistanceIncrease)
 				/ip firewall connection remove [/ip firewall connection find protocol=udp]

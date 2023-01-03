@@ -37,9 +37,12 @@
 # Define the distance increase of a route when it fails
 :local DistanceIncrease 200
 
-# Define name of main and backup ISP for mail and logging
+# Define name and gateway of main and backup ISP for mail and logging
+# Below are examples
 :local MainISPname SWIATLOWOD
+:local MainISPgateway 192.0.2.1
 :local BackupISPname NEOSTRADA
+:local BackupISPgateway 192.168.15.2
 
 # Define name of TO & CC field for mail both MUST be SET
 :local TOmail1 admin1@example.com
@@ -48,8 +51,24 @@
 
 
 
+
 # Editing the script after this point may break it
 # -------------- stop editing here --------------
+
+# Add routes
+add comment=FAILOVER_CHECK_BACKUP distance=1 dst-address=192.5.5.241/32 gateway=$BackupISPgateway
+add comment=FAILOVER_CHECK_BACKUP distance=5 dst-address=192.5.5.241/32 type=blackhole
+add comment=FAILOVER_CHECK_BACKUP distance=1 dst-address=193.0.14.129/32 gateway=$BackupISPgateway
+add comment=FAILOVER_CHECK_BACKUP distance=5 dst-address=193.0.14.129/32 type=blackhole
+add comment=FAILOVER_CHECK_BACKUP distance=1 dst-address=199.7.83.42/32 gateway=$BackupISPgateway
+add comment=FAILOVER_CHECK_BACKUP distance=5 dst-address=199.7.83.42/32 type=blackhole
+add comment=FAILOVER_CHECK_MAIN distance=1 dst-address=192.58.128.30/32 gateway=$MainISPgateway
+add comment=FAILOVER_CHECK_MAIN distance=5 dst-address=192.58.128.30/32 type=blackhole
+add comment=FAILOVER_CHECK_MAIN distance=1 dst-address=192.203.230.10/32 gateway=$MainISPgateway
+add comment=FAILOVER_CHECK_MAIN distance=5 dst-address=192.203.230.10/32 type=blackhole
+add comment=FAILOVER_CHECK_MAIN distance=1 dst-address=199.7.91.13/32 gateway=$MainISPgateway
+add comment=FAILOVER_CHECK_MAIN distance=5 dst-address=199.7.91.13/32 type=blackhole
+
 
 # Define System identity to variable
 :local ThisBox [/system identity get name]

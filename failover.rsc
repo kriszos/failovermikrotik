@@ -7,7 +7,7 @@
 # this script please visit the wiki page at
 # http://wiki.mikrotik.com/wiki/Failover_Scripting
 # ------------------- header -------------------
-# changes by Kriszos, version 1.2.0
+# changes by Kriszos, version 1.2.2
 # changes:
 # added support for multpile hosts to check connectivity
 # added mail notification,
@@ -38,12 +38,12 @@
 :local DistanceIncrease 200
 
 # Define name of main and backup ISP for mail and logging
-:local MainISPname UPC
-:local BackupISPname TMOBILE
+:local MainISPname SWIATLOWOD
+:local BackupISPname NEOSTRADA
 
 # Define name of TO & CC field for mail both MUST be SET
-:local TOmail1 admin@example.com
-:local TOmail2 ceo@example.com
+:local TOmail1 admin1@example.com
+:local TOmail2 admin2@example.com
 
 
 
@@ -103,6 +103,7 @@
 				/ip route set $i distance=([/ip route get $i distance] + $DistanceIncrease)
 				/ip firewall connection remove [/ip firewall connection find protocol=udp]
 				/ip firewall connection remove [/ip firewall connection find protocol=icmp]
+        /ip firewall connection remove [/ip firewall connection find where connection-type=sip]
 				:log warning "$MainISPname Route distance increase finished."
 				:delay 1
 				/tool e-mail send to=$TOmail1 cc=$TOmail2 subject="PROBLEM_$ThisBox_$MainISPname"
@@ -122,6 +123,7 @@
 				/ip route set $i distance=([/ip route get $i distance] - $DistanceIncrease)
 				/ip firewall connection remove [/ip firewall connection find protocol=udp]
 				/ip firewall connection remove [/ip firewall connection find protocol=icmp]
+        /ip firewall connection remove [/ip firewall connection find where connection-type=sip]
 				:log warning "$MainISPname Route distance decrease finished."
 				:delay 1
 				/tool e-mail send to=$TOmail1 cc=$TOmail2 subject="OK_$ThisBox_$MainISPname"
